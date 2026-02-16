@@ -1,0 +1,64 @@
+============================================================
+SIMULATORE DI CIRCUITI QUANTISTICI MULTI-THREAD
+============================================================
+
+Progetto per l'esame di SO2
+
+--- 1. DESCRIZIONE DEI FILE ---
+
+Il progetto è strutturato in modo modulare per separare la logica matematica, 
+il parsing dei file e la gestione del circuito:
+
+- complex.h/c        : Definizione della struttura Complex e operazioni algebriche 
+                       (somma, prodotto, modulo).
+- complex_vector.h/c : Gestione del vettore di stato (allocazione, deallocazione, stampa/debug).
+- complex_matrix.h/c : Operazioni su matrici e prodotto matrice-vettore.
+- circuit.h/c        : Core del simulatore. Contiene la logica di applicazione dei 
+                       gate e l'esecuzione parallela tramite thread.
+- initparser.h/c     : Parser per il file di inizializzazione.
+- circparser.h/c     : Parser per il file del circuito e delle definizioni dei gate.
+- main.c             : Punto di ingresso del programma, gestisce gli argomenti 
+                       da riga di comando.
+- Makefile           : Script per la compilazione automatica del progetto.
+
+--- 2. REQUISITI E COMPILAZIONE ---
+
+Requisiti:
+- Compilatore GCC
+- Libreria standard C (compresa pthread per il multi-threading)
+
+Compilazione:
+Per compilare il programma, eseguire il comando 'make' nel terminale:
+    $ make
+
+Questo genererà l'eseguibile 'quantum_sim'.
+
+--- 3. MANUALE UTENTE ---
+
+Il programma accetta tre parametri obbligatori da riga di comando:
+
+Sintassi:
+    ./quantum_sim -i <file_init> -c <file_circ> -t <num_thread>
+
+Parametri:
+    -i : Percorso del file di inizializzazione (es. test/init.q).
+    -c : Percorso del file del circuito (es. test/circ.q).
+    -t : Numero di thread da utilizzare per la computazione.
+
+Esempio di esecuzione:
+    $ ./quantum_sim -i test/init-ex.q -c test/circ-ex.q -t 4
+
+Il programma caricherà lo stato iniziale, applicherà la sequenza di porte 
+quantistiche specificate e stamperà su standard output il vettore di stato finale.
+
+--- 4. NOTE IMPLEMENTATIVE ---
+
+Per quanto riguarda l'esecuzione del circuito, ho fatto una scelta precisa sulla parallelizzazione. Anche se il testo suggeriva che si potesse usare la proprietà associativa (moltiplicando le matrici tra loro), ho preferito parallelizzare il prodotto matrice-vettore per ogni singolo gate.
+
+Motivazioni :
+
+Prima di tutto per una questione di efficienza. Se consideriamo il caso H10 (10 qubit), le matrici sono 1024x1024. Fare il prodotto tra due matrici di questo tipo è pesantissimo: parliamo di una complessità O(N^3), quindi oltre un miliardo di operazioni. Invece, moltiplicare una matrice per un vettore è molto più leggero (O(N^2)), circa un milione di operazioni.
+
+In secondo luogo, c'è il problema della memoria. Se avessi dovuto moltiplicare e salvare diverse matrici intermedie da 1024x1024, avrei occupato un sacco di RAM inutilmente (ogni matrice H10 sono circa 16MB). Con il mio approccio, il programma resta leggero e occupa solo lo stretto necessario per lo stato e i gate definiti.
+
+Quindi, dividendo le righe del vettore tra i vari thread, il simulatore scala benissimo e i tempi di calcolo restano bassi anche con 10 qubit. Mi è sembrato l'approccio più sensato per gestire anche i file più grandi (H10 con altri approcci provati usava tutta la RAM e nom veniva completato).

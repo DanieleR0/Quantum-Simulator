@@ -1,136 +1,31 @@
-\documentclass[a4paper,12pt]{article}
+<h1 align="center">⚛️ Quantum Circuit Multi-Thread Simulator</h1>
 
-\usepackage[italian]{babel}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{geometry}
-\usepackage{listings}
-\usepackage{amsmath}
-\usepackage{hyperref}
+<p align="center">
+Simulatore di circuiti quantistici multi-thread in C<br>
+Progetto per l'esame di <b>Sistemi Operativi 2</b>
+</p>
 
-\geometry{margin=2.5cm}
+<p align="center">
+  <img src="https://img.shields.io/badge/Linguaggio-C-blue">
+  <img src="https://img.shields.io/badge/Threading-pthreads-orange">
+  <img src="https://img.shields.io/badge/Build-make-green">
+  <img src="https://img.shields.io/badge/Platform-Linux-lightgrey">
+</p>
 
-\title{\textbf{Simulatore di Circuiti Quantistici Multi-Thread}}
-\author{Progetto per l'esame di Sistemi Operativi 2 (SO2)}
-\date{}
+---
 
-\begin{document}
+## 📌 Descrizione
 
-\maketitle
-\thispagestyle{empty}
+Il progetto implementa un simulatore di circuiti quantistici che utilizza:
 
-\section*{1. Descrizione dei File}
+- Rappresentazione tramite vettore di stato complesso
+- Applicazione sequenziale di gate quantistici
+- Parallelizzazione tramite POSIX Threads (`pthread`)
+- Ottimizzazione del prodotto matrice-vettore
 
-Il progetto è strutturato in modo modulare per separare la logica matematica,
-il parsing dei file e la gestione del circuito.
+L’obiettivo è garantire efficienza computazionale e controllo dell’uso della memoria.
 
-\begin{itemize}
-    \item \texttt{complex.h/c} \\
-    Definizione della struttura \texttt{Complex} e operazioni algebriche (somma, prodotto, modulo).
-    
-    \item \texttt{complex\_vector.h/c} \\
-    Gestione del vettore di stato (allocazione, deallocazione, stampa/debug).
-    
-    \item \texttt{complex\_matrix.h/c} \\
-    Operazioni su matrici e prodotto matrice-vettore.
-    
-    \item \texttt{circuit.h/c} \\
-    Core del simulatore. Contiene la logica di applicazione dei gate e l'esecuzione parallela tramite thread.
-    
-    \item \texttt{initparser.h/c} \\
-    Parser per il file di inizializzazione.
-    
-    \item \texttt{circparser.h/c} \\
-    Parser per il file del circuito e delle definizioni dei gate.
-    
-    \item \texttt{main.c} \\
-    Punto di ingresso del programma, gestisce gli argomenti da riga di comando.
-    
-    \item \texttt{Makefile} \\
-    Script per la compilazione automatica del progetto.
-\end{itemize}
+---
 
-\section*{2. Requisiti e Compilazione}
+## 🏗 Architettura
 
-\subsection*{Requisiti}
-
-\begin{itemize}
-    \item Compilatore GCC
-    \item Libreria standard C (compresa \texttt{pthread} per il multi-threading)
-\end{itemize}
-
-\subsection*{Compilazione}
-
-Per compilare il programma, eseguire il comando:
-
-\begin{lstlisting}
-$ make
-\end{lstlisting}
-
-Questo genererà l'eseguibile \texttt{quantum\_sim}.
-
-\section*{3. Manuale Utente}
-
-Il programma accetta tre parametri obbligatori da riga di comando.
-
-\subsection*{Sintassi}
-
-\begin{lstlisting}
-./quantum_sim -i <file_init> -c <file_circ> -t <num_thread>
-\end{lstlisting}
-
-\subsection*{Parametri}
-
-\begin{itemize}
-    \item \texttt{-i} : Percorso del file di inizializzazione (es. \texttt{test/init.q})
-    \item \texttt{-c} : Percorso del file del circuito (es. \texttt{test/circ.q})
-    \item \texttt{-t} : Numero di thread da utilizzare per la computazione
-\end{itemize}
-
-\subsection*{Esempio di esecuzione}
-
-\begin{lstlisting}
-$ ./quantum_sim -i test/init-ex.q -c test/circ-ex.q -t 4
-\end{lstlisting}
-
-Il programma carica lo stato iniziale, applica la sequenza di porte quantistiche specificate e stampa su standard output il vettore di stato finale.
-
-\section*{4. Note Implementative}
-
-Per quanto riguarda l'esecuzione del circuito, è stata adottata una scelta precisa sulla parallelizzazione.
-Sebbene il testo suggerisse di sfruttare la proprietà associativa moltiplicando tra loro le matrici dei gate,
-si è preferito parallelizzare il prodotto matrice-vettore per ogni singolo gate.
-
-\subsection*{Motivazioni}
-
-\paragraph{Efficienza computazionale}
-
-Nel caso H10 (10 qubit), le matrici hanno dimensione $1024 \times 1024$.
-
-\begin{itemize}
-    \item Prodotto matrice-matrice: complessità $O(N^3)$ \\
-    Oltre un miliardo di operazioni.
-    
-    \item Prodotto matrice-vettore: complessità $O(N^2)$ \\
-    Circa un milione di operazioni.
-\end{itemize}
-
-Il secondo approccio risulta significativamente più efficiente.
-
-\paragraph{Gestione della memoria}
-
-Ogni matrice $1024 \times 1024$ occupa circa 16 MB di memoria.
-Moltiplicare e memorizzare matrici intermedie avrebbe comportato un elevato consumo di RAM.
-
-L'approccio adottato mantiene in memoria solo lo stato corrente e i gate necessari,
-garantendo un utilizzo contenuto delle risorse.
-
-\paragraph{Scalabilità}
-
-Dividendo le righe del vettore tra i vari thread, il simulatore scala efficacemente su sistemi multi-core.
-I tempi di calcolo rimangono contenuti anche con 10 qubit.
-
-Approcci alternativi basati sulla moltiplicazione preventiva tra matrici hanno mostrato
-un consumo eccessivo di memoria per H10, impedendo il completamento dell'esecuzione.
-
-\end{document}

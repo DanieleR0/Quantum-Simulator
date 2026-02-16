@@ -1,55 +1,136 @@
-# ⚛️ Simulatore di Circuiti Quantistici Multi-Thread
+\documentclass[a4paper,12pt]{article}
 
-<p align="center">
-  <b>Progetto per l'esame di Sistemi Operativi 2 (SO2)</b><br>
-  Implementazione in C con parallelizzazione tramite POSIX Threads
-</p>
+\usepackage[italian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{hyperref}
 
----
+\geometry{margin=2.5cm}
 
-## 📌 Descrizione
+\title{\textbf{Simulatore di Circuiti Quantistici Multi-Thread}}
+\author{Progetto per l'esame di Sistemi Operativi 2 (SO2)}
+\date{}
 
-Il progetto consiste nello sviluppo di un **simulatore di circuiti quantistici multi-thread** scritto in linguaggio C.
+\begin{document}
 
-Il simulatore rappresenta lo stato quantistico tramite un vettore complesso e applica una sequenza di gate quantistici definiti da file di input.  
-L'esecuzione è ottimizzata attraverso l'utilizzo di **POSIX Threads (`pthread`)**, parallelizzando il prodotto matrice-vettore per sfruttare sistemi multi-core.
+\maketitle
+\thispagestyle{empty}
 
-L'obiettivo principale è garantire:
+\section*{1. Descrizione dei File}
 
-- Efficienza computazionale  
-- Ottimizzazione dell’uso della memoria  
-- Architettura modulare e manutenibile  
-- Scalabilità fino a 10 qubit  
+Il progetto è strutturato in modo modulare per separare la logica matematica,
+il parsing dei file e la gestione del circuito.
 
----
+\begin{itemize}
+    \item \texttt{complex.h/c} \\
+    Definizione della struttura \texttt{Complex} e operazioni algebriche (somma, prodotto, modulo).
+    
+    \item \texttt{complex\_vector.h/c} \\
+    Gestione del vettore di stato (allocazione, deallocazione, stampa/debug).
+    
+    \item \texttt{complex\_matrix.h/c} \\
+    Operazioni su matrici e prodotto matrice-vettore.
+    
+    \item \texttt{circuit.h/c} \\
+    Core del simulatore. Contiene la logica di applicazione dei gate e l'esecuzione parallela tramite thread.
+    
+    \item \texttt{initparser.h/c} \\
+    Parser per il file di inizializzazione.
+    
+    \item \texttt{circparser.h/c} \\
+    Parser per il file del circuito e delle definizioni dei gate.
+    
+    \item \texttt{main.c} \\
+    Punto di ingresso del programma, gestisce gli argomenti da riga di comando.
+    
+    \item \texttt{Makefile} \\
+    Script per la compilazione automatica del progetto.
+\end{itemize}
 
-## 🏗 Struttura del Progetto
+\section*{2. Requisiti e Compilazione}
 
-Il codice è organizzato in moduli indipendenti per separare la logica matematica, il parsing e il core del simulatore.
+\subsection*{Requisiti}
 
-| File | Descrizione |
-|------|------------|
-| `complex.h/c` | Struttura `Complex` e operazioni algebriche |
-| `complex_vector.h/c` | Gestione del vettore di stato |
-| `complex_matrix.h/c` | Operazioni su matrici e prodotto matrice-vettore |
-| `circuit.h/c` | Logica di applicazione dei gate e parallelizzazione |
-| `initparser.h/c` | Parser del file di inizializzazione |
-| `circparser.h/c` | Parser del circuito e definizione dei gate |
-| `main.c` | Gestione CLI e avvio del programma |
-| `Makefile` | Script di compilazione |
+\begin{itemize}
+    \item Compilatore GCC
+    \item Libreria standard C (compresa \texttt{pthread} per il multi-threading)
+\end{itemize}
 
----
+\subsection*{Compilazione}
 
-## 🛠 Requisiti
+Per compilare il programma, eseguire il comando:
 
-- Compilatore **GCC**
-- Libreria standard C
-- Supporto **POSIX Threads (`pthread`)**
-- Ambiente Unix-like (Linux consigliato)
+\begin{lstlisting}
+$ make
+\end{lstlisting}
 
----
+Questo genererà l'eseguibile \texttt{quantum\_sim}.
 
-## 🔧 Compilazione
+\section*{3. Manuale Utente}
 
-```bash
-make
+Il programma accetta tre parametri obbligatori da riga di comando.
+
+\subsection*{Sintassi}
+
+\begin{lstlisting}
+./quantum_sim -i <file_init> -c <file_circ> -t <num_thread>
+\end{lstlisting}
+
+\subsection*{Parametri}
+
+\begin{itemize}
+    \item \texttt{-i} : Percorso del file di inizializzazione (es. \texttt{test/init.q})
+    \item \texttt{-c} : Percorso del file del circuito (es. \texttt{test/circ.q})
+    \item \texttt{-t} : Numero di thread da utilizzare per la computazione
+\end{itemize}
+
+\subsection*{Esempio di esecuzione}
+
+\begin{lstlisting}
+$ ./quantum_sim -i test/init-ex.q -c test/circ-ex.q -t 4
+\end{lstlisting}
+
+Il programma carica lo stato iniziale, applica la sequenza di porte quantistiche specificate e stampa su standard output il vettore di stato finale.
+
+\section*{4. Note Implementative}
+
+Per quanto riguarda l'esecuzione del circuito, è stata adottata una scelta precisa sulla parallelizzazione.
+Sebbene il testo suggerisse di sfruttare la proprietà associativa moltiplicando tra loro le matrici dei gate,
+si è preferito parallelizzare il prodotto matrice-vettore per ogni singolo gate.
+
+\subsection*{Motivazioni}
+
+\paragraph{Efficienza computazionale}
+
+Nel caso H10 (10 qubit), le matrici hanno dimensione $1024 \times 1024$.
+
+\begin{itemize}
+    \item Prodotto matrice-matrice: complessità $O(N^3)$ \\
+    Oltre un miliardo di operazioni.
+    
+    \item Prodotto matrice-vettore: complessità $O(N^2)$ \\
+    Circa un milione di operazioni.
+\end{itemize}
+
+Il secondo approccio risulta significativamente più efficiente.
+
+\paragraph{Gestione della memoria}
+
+Ogni matrice $1024 \times 1024$ occupa circa 16 MB di memoria.
+Moltiplicare e memorizzare matrici intermedie avrebbe comportato un elevato consumo di RAM.
+
+L'approccio adottato mantiene in memoria solo lo stato corrente e i gate necessari,
+garantendo un utilizzo contenuto delle risorse.
+
+\paragraph{Scalabilità}
+
+Dividendo le righe del vettore tra i vari thread, il simulatore scala efficacemente su sistemi multi-core.
+I tempi di calcolo rimangono contenuti anche con 10 qubit.
+
+Approcci alternativi basati sulla moltiplicazione preventiva tra matrici hanno mostrato
+un consumo eccessivo di memoria per H10, impedendo il completamento dell'esecuzione.
+
+\end{document}

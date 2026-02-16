@@ -1,31 +1,45 @@
-<h1 align="center">⚛️ Quantum Circuit Multi-Thread Simulator</h1>
-
-<p align="center">
-Simulatore di circuiti quantistici multi-thread in C<br>
-Progetto per l'esame di <b>Sistemi Operativi 2</b>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Linguaggio-C-blue">
-  <img src="https://img.shields.io/badge/Threading-pthreads-orange">
-  <img src="https://img.shields.io/badge/Build-make-green">
-  <img src="https://img.shields.io/badge/Platform-Linux-lightgrey">
-</p>
+# ⚛️ Simulatore di Circuiti Quantistici Multi-Thread
+**Progetto per l'esame di Sistemi Operativi 2 (SO2)**
 
 ---
 
 ## 📌 Descrizione
+Questo progetto implementa un simulatore di circuiti quantistici ad alte prestazioni, scritto in **C** e ottimizzato tramite l'uso di **Pthreads** per l'esecuzione parallela.
 
-Il progetto implementa un simulatore di circuiti quantistici che utilizza:
+Il simulatore:
 
-- Rappresentazione tramite vettore di stato complesso
-- Applicazione sequenziale di gate quantistici
-- Parallelizzazione tramite POSIX Threads (`pthread`)
-- Ottimizzazione del prodotto matrice-vettore
-
-L’obiettivo è garantire efficienza computazionale e controllo dell’uso della memoria.
+- Legge file di input che descrivono lo stato iniziale e il circuito quantistico
+- Applica una sequenza di porte quantistiche
+- Utilizza più thread per accelerare il calcolo
+- Stampa il vettore di stato finale su standard output
 
 ---
 
-## 🏗 Architettura
+## 📂 Struttura dei File
+Il progetto è strutturato in moduli per separare la logica matematica, il parsing dei file e la gestione del circuito:
 
+| File | Descrizione |
+| :--- | :--- |
+| `complex.h/c` | Definizione della struttura `Complex` e operazioni algebriche |
+| `complex_vector.h/c` | Gestione del vettore di stato (allocazione, stampa, debug) |
+| `complex_matrix.h/c` | Operazioni su matrici e prodotto matrice-vettore |
+| `circuit.h/c` | Core del simulatore: applicazione gate e parallelizzazione |
+| `initparser.h/c` | Parser per il file di inizializzazione |
+| `circparser.h/c` | Parser per il file del circuito e definizione dei gate |
+| `main.c` | Entry point del programma e gestione CLI |
+| `Makefile` | Script di compilazione |
+
+---
+
+## 🛠️ Requisiti e Compilazione
+
+### Requisiti
+- Compilatore **GCC**
+- Libreria standard C
+- Supporto per **POSIX Threads (`pthread`)**
+
+### Compilazione
+Per compilare il programma, eseguire:
+
+```bash
+make
